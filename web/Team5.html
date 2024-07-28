@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Team 5 Wild Fire Interface</title>
+        
+        <!-- Include eel.js - note this file doesn't exist in the 'web' directory -->
+        <script type="text/javascript" src="/eel.js"></script>
+        <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', (event) => {
+
+        let currentResponseBlock = null;
+        let textBoxContentBuffer = null;
+        let isOnline = false;
+        const ChatContainer = document.getElementById('ChatDisplayArea');
+        const textBox = document.getElementById('textBox');
+        const chatBox = document.getElementById('ChatBox');
+        const maxHeight = 8.5 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+        const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+        
+        eel.expose(say_hello_js);               // Expose this function to Python
+        function say_hello_js(x) {
+            console.log("Hello from " + x);
+        }
+
+        say_hello_js("Javascript World!");
+        eel.say_hello_py("Javascript World!");  // Call a Python function
+
+        function sendButtonClicked() {
+          console.log("Button Clicked");
+          textBoxContentBuffer = document.getElementById("textBox").value;
+          eel.requestNewMessage_py();
+        }
+        const sendButton = document.getElementById('SendButton');
+        sendButton.addEventListener('click', sendButtonClicked);
+
+        eel.expose(appendResponseData);
+        function appendResponseData(x) {
+          const newText = document.createTextNode(x);
+          currentResponseBlock.appendChild(newText);
+        }
+
+        eel.expose(newQuestionRequest);
+        function newQuestionRequest() {
+          const template = document.getElementById('ChatTemplate');
+          let clone = document.importNode(template.content, true);
+          clone.getElementById("question").textContent = textBoxContentBuffer;
+          currentResponseBlock = clone.getElementById("response");
+          ChatContainer.append(clone);
+          document.getElementById("textBox").value = "";
+        }
+
+        eel.expose(updateStatus);
+        function updateStatus(x) {
+          if ( x == "true" )
+          {
+            if ( !isOnline )
+            {
+              document.getElementById("status").textContent = "Online";
+              document.getElementById("light").style.backgroundColor = "lime"
+              isOnline = true;
+            }
+          }
+          else
+          {
+            if ( isOnline )
+            {
+              document.getElementById("status").textContent = "Offline";
+              document.getElementById("light").style.backgroundColor = "crimson"
+              isOnline = false;
+            }
+          }
+        }
+
+        textBox.addEventListener('input', () => {
+          textBox.style.height = 'auto'; // Reset the height to auto to recalculate
+          textBox.style.height = textBox.scrollHeight + 'px'; // Set the height to the scroll height
+
+          proportionalHeight = (textBox.scrollHeight + rem);
+          if (proportionalHeight > maxHeight) 
+          {
+            proportionalHeight = maxHeight;
+          }
+          chatBox.style.height = (proportionalHeight) + 'px';
+
+          if (textBox.scrollHeight > parseInt(window.getComputedStyle(textBox).maxHeight)) {
+              textBox.classList.add('overflow'); // Add overflow class if scroll height exceeds max height
+          } else {
+              textBox.classList.remove('overflow'); // Remove overflow class otherwise
+          }
+        });
+
+
+        });
+        </script>
+        <link rel="stylesheet" href="styles.css">
+
+    </head>
+    
+    <body>
+      <div class="TopTextTitle">
+        <h1 class="header">Team 5 Interface</h1>
+      </div>
+      <div class="statusDiv"> 
+        <div class="light" id="light"></div>
+        <h1 class="header" id="status">Offline</h1>
+      </div>
+      <div class="GUIContainer">
+        <div class="ChatDisplayArea" id="ChatDisplayArea">
+          <template id="ChatTemplate">
+            <div class="ChatQuestionBoxAlign">
+              <div class="questionBox">
+                <p class="ChatQuestionText" id="question"></p>
+              </div>
+            </div>
+            <p class="ChatResponseText" id="response"></p>
+          </template>
+        </div>
+        <div class="ChatEndingBuffer">
+        </div>
+      </div>
+      <div class="TextInputArea">
+        <div class="ChatBox" id="ChatBox">
+          <textarea class="UserInputBox" placeholder="Message AI" rows="1" id="textBox"></textarea>
+          <button class="SubmitBox" id="SendButton">
+            <img src="685066_arrows_512x512.png" alt="Send">
+          </button>
+        </div>
+      </div>
+    </body>
+</html>
